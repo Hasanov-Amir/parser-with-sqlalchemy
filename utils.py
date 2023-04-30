@@ -88,3 +88,19 @@ def get_item_history(item_id):
         result[orig_item].append(data)
 
     return result
+
+
+def get_all_items():
+    result = {}
+
+    items = session.query(Item).all()
+
+    for item in items:
+        result.update({
+            item.id: {
+                "title": item.title,
+                "price": item.price
+            }
+        })
+
+    return result

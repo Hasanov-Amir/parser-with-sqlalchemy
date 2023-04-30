@@ -1,0 +1,17 @@
+GET http://127.0.0.1:8080/refresh
+
+response:
+Added {new_items_count} new items
+
+
+GET http://127.0.0.1:8080/show_changes
+
+response:
+list of strings in response key
+
+
+GET http://127.0.0.1:8080/show_history?item_id={int}
+
+response:
+
+in response there are item title and list of his properties

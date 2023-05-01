@@ -97,10 +97,9 @@ def get_all_items():
 
     for item in items:
         result.append({
-            item.id: {
-                "title": item.title,
-                "price": item.price
-            }
+            "id": item.id,
+            "title": item.title,
+            "price": item.price
         })
 
     return result

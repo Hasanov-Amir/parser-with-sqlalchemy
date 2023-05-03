@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 import pandas as pd
@@ -37,30 +37,47 @@ def refresh():
     return result
 
 
-def show_changes(user_date=datetime.today()):
-
+def show_changes(user_date):
+    last_date = session.query(History).order_by(desc(History.id)).first()
     result = []
 
     if type(user_date) != datetime:
-        user_date = datetime.strptime(user_date+" 23:59:59", "%d.%m.%Y  %H:%M:%S")
+        last_date = datetime.strptime(user_date+" 23:58:59", "%d.%m.%Y  %H:%M:%S")
 
-    user_day_history = session.query(History).filter(func.DATE(History.add_time) == user_date.date()).all()
+        last_date = session.query(History).order_by(
+            desc(History.id)
+        ).filter(
+            func.DATE(History.add_time) == last_date.date()
+        ).first()
+
+        if not last_date:
+            print("\n\tNo records for this date.\n")
+            return 0
+
+    last_date = last_date.add_time
+
+    user_day_history = session.query(History).filter(
+        History.add_time > last_date - timedelta(minutes=1),
+        History.add_time < last_date + timedelta(minutes=1)
+    ).all()
 
     for udh in user_day_history:
         yesterday_item = session.query(History).filter(
-            History.add_time < user_date,
-            History.count > udh.count
+            History.add_time < last_date,
         ).filter_by(
             item_id=udh.item_id,
             price=udh.price
-        ).first()
+        ).order_by(desc(History.add_time)).limit(2)
 
-        item = session.query(Item).filter_by(id=udh.item_id).first()
+        yesterday_item = yesterday_item[1] if 1 < yesterday_item.count() else None
+
+        item = session.query(Item).filter_by(id=udh.item_id, price=udh.price).first()
 
         try:
-            result_item = f"\n{item.id} {item.title}:\n\t- Added in {item.add_date}\n\t- Old count {yesterday_item.count}\n\t- New count {udh.count}\n\t- Was sold {yesterday_item.count-udh.count}\n\t- Price {udh.price}\n"
-            print(result_item)
-            result.append(result_item)
+            if yesterday_item.count > udh.count:
+                result_item = f"\n{item.id} {item.title}:\n\t- Added in {item.add_date}\n\t- Old count {yesterday_item.count}\n\t- New count {udh.count}\n\t- Was sold {yesterday_item.count-udh.count}\n\t- Price {udh.price}\n"
+                print(result_item)
+                result.append(result_item)
         except:
             pass
 

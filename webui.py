@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Flask, render_template, request, jsonify
 
 from utils import refresh, show_changes, get_item_history, get_all_items
@@ -21,7 +23,7 @@ def do_refresh():
 
 @app.route("/show_changes")
 def do_show_changes():
-    response = jsonify(response=show_changes())
+    response = jsonify(response=show_changes(datetime.today()))
     response.headers.add("Access-Control-Allow-Origin", "*")
 
     return response
